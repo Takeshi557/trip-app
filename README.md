@@ -1,35 +1,80 @@
-# v0-plan
+# AI旅行先提案アプリ
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+条件を入力すると、AIが最適な旅行先を提案するWebアプリです。
 
-## Built with v0
+---
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+## デモ
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_4AzRxRGh2JGOsxf5GrzBAtc5u4Nk)
+https://あなたのURL.vercel.app
 
-## Getting Started
+---
 
-First, run the development server:
+## アプリ画面
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+### トップ画面
+![トップ画面](public/top.png)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 結果画面
+![結果画面](public/result.png)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-## Learn More
+## 主な機能
 
-To learn more, take a look at the following resources:
+- 旅行条件の入力
+- AIによる旅行先提案
+- 旅行先の詳細情報表示
+- 保存機能
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+---
 
-<a href="https://v0.app/chat/api/kiro/clone/Takeshi557/v0-plan" alt="Open in Kiro"><img src="https://pdgvvgmkdvyeydso.public.blob.vercel-storage.com/open%20in%20kiro.svg?sanitize=true" /></a>
+## 使用技術
+
+| 技術 | 用途 |
+|---|---|
+| Next.js | フロントエンド |
+| TypeScript | 型安全な開発 |
+| TailwindCSS | UIデザイン |
+| Gemini API | AI旅行提案 |
+| Vercel | デプロイ |
+| GitHub Actions | CI |
+| DevTools | デバッグ |
+
+---
+
+## コード例
+
+### API（旅行先生成）
+
+```ts
+import { generateObject } from "ai"
+import { google } from "@ai-sdk/google"
+import { z } from "zod"
+
+const recommendationSchema = z.object({
+  recommendations: z.array(
+    z.object({
+      name: z.string(),
+      area: z.string(),
+      reason: z.string(),
+      estimatedBudget: z.string(),
+      days: z.string(),
+      bestSeason: z.string(),
+      tags: z.array(z.string())
+    })
+  )
+})
+
+export async function POST(req: Request) {
+
+  const body = await req.json()
+
+  const result = await generateObject({
+    model: google("gemini-2.5-flash"),
+    prompt: "旅行先を提案してください",
+    schema: recommendationSchema
+  })
+
+  return Response.json(result.object)
+}
