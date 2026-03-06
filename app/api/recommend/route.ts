@@ -1,4 +1,5 @@
-import { generateText, Output } from "ai"
+import { generateObject } from "ai"
+import { google } from "@ai-sdk/google"
 import { z } from "zod"
 
 export const maxDuration = 30
@@ -7,11 +8,11 @@ const recommendationSchema = z.object({
   recommendations: z.array(
     z.object({
       name: z.string().describe("旅行先の名前"),
-      area: z.string().describe("エリア・地方（例: 関東、北海道、沖縄）"),
+      area: z.string().describe("エリア。地方"),
       reason: z.string().describe("おすすめの理由（2-3文）"),
-      estimatedBudget: z.string().describe("一人あたりの目安予算（例: 30,000円〜50,000円）"),
-      days: z.string().describe("おすすめ日数（例: 2泊3日）"),
-      bestSeason: z.string().describe("ベストシーズン（例: 春〜初夏）"),
+      estimatedBudget: z.string().describe("一人あたりの目安予算"),
+      days: z.string().describe("おすすめ日数"),
+      bestSeason: z.string().describe("ベストシーズン"),
       tags: z.array(z.string()).describe("特徴タグ（3-5個）"),
     })
   ),
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
     const { departure, days, budget, companion, preferences, mood, transport } =
       await req.json()
 
-    const numResults = Math.min(Math.max(3, Number(days) || 3), 6)
+    const numResults = Math.min(Math.max(Number(days) || 3, 3), 6)
 
     const prompt = `あなたは日本国内の旅行エキスパートです。以下の条件に合う旅行先を${numResults}件提案してください。
 
@@ -39,18 +40,16 @@ export async function POST(req: Request) {
 - 日本国内の実在する旅行先を提案すること
 - 条件に合った具体的で実用的な提案にすること
 - 各提案は異なるエリアから選ぶこと
-- おすすめ理由は条件に紐づけた具体的な内容にすること
+- おすすめの理由は条件に紐づけた具体的な内容にすること
 - 予算は交通費・宿泊費・食費を含めた目安を提示すること`
 
-    const result = await generateText({
-      model: "openai/gpt-4o-mini",
+    const result = await generateObject({
+      model: google("gemini-2.5-flash"),
       prompt,
-      output: Output.object({
-        schema: recommendationSchema,
-      }),
+      schema: recommendationSchema,
     })
 
-    return Response.json(result.output)
+    return Response.json(result.object)
   } catch (error) {
     console.error("[v0] API recommend error:", error)
     return Response.json(
